@@ -1,10 +1,10 @@
-#Fixing the department names in the priority file
+#Fixing the department names in the priority file after user error
 import pandas as pd
 
 priority = pd.read_csv('/workspaces/Scholarly-Impact---Automation-Pipeline-Work/src/data/priority_data.csv')
 original = pd.read_csv('/workspaces/Scholarly-Impact---Automation-Pipeline-Work/src/data/original.csv')  # the correct one
 
-# Build a lookup dict: scopus_id -> department from original
+# lookup dict: scopus_id -> department from original
 original_scopus = original[original['Identifier scheme'] == 'Scopus ID']
 dept_lookup = dict(zip(original_scopus['Identifier'].astype(str), 
                        original_scopus['Department']))
@@ -18,4 +18,3 @@ priority['Department'] = priority.apply(
 )
 
 priority.to_csv('priority_data_updated.csv', index=False)
-print("Done!")

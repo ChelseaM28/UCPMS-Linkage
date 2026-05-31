@@ -25,10 +25,7 @@ def retrieve_UCPMS_data(list_of_scopus_ids_from_api):
     df = df[df['Identifier scheme'] == 'Scopus ID']
     
     df = df[df['Identifier'].isin(list_of_scopus_ids_from_api)]
-    #dropped = df[df['Name'].isna()]                               
-    #print(f"Dropping {len(dropped)} rows with missing names: {list(dropped['Identifier'])}")
     df = df[df['Name'].notna()]  
-    #print(f"Filtered UCPMS entries: {len(df)}")
 
   # Key by Scopus ID so zipper can match by ID, not position
     ucpms_by_id = {}
@@ -37,7 +34,7 @@ def retrieve_UCPMS_data(list_of_scopus_ids_from_api):
         ucpms_by_id[scopus_id] = {
             "name": row['Name'],
             "fields": str(row['Department']) if pd.notna(row['Department']) else ""
-            # No institution column in UCPMS — field doubles as context
+            # No institution column in UCPMS, field doubles as context
         }
    
     print("Completed running retrieve_UCPMS_data")
@@ -56,7 +53,6 @@ def listifying_scopus_data(scopus_api_data, list_of_scopus_ids_from_api):
         if scopus_id not in list_of_scopus_ids_from_api:
             continue
         if not data.get("name"): 
-          #print(f"Skipping Scopus ID {scopus_id} — missing name")
           continue
         # Fields: join list into one string
         fields_str = ", ".join(data.get("fields", []))
@@ -75,7 +71,6 @@ def listifying_scopus_data(scopus_api_data, list_of_scopus_ids_from_api):
             "fields": fields_str,
             "affiliations": affiliations_str
         }
-    #print(f"First couple scopus entries: {list(scopus_by_id.items())[:2] }")
     print("Completed running listifying_scopus_data")
     return scopus_by_id
 
@@ -104,7 +99,7 @@ def zipper(ucpms_by_id, scopus_by_id):
 
         name_pairs.append((scopus["name"], ucpms["name"]))
         field_pairs.append((scopus["fields"], ucpms["fields"]))
-        # UCPMS has no institution column — use empty string as placeholder
+        # UCPMS has no institution column, use empty string as placeholder
         institution_pairs.append((scopus["affiliations"], ""))
 
     print("Completed running Zipper")
@@ -123,22 +118,3 @@ def main():
   print("Completed running raw_data_converter.main")
   return name_pairs, field_pairs, institution_pairs, shared_ids
 
-#I need to simply pass this data into the feature functions. To cary this data over to the 
-#other script, I will need it in a format that satisfies:
-'''
-features = []
-    for i in range(len(data)):
-        #The ML model needs a list of features for each name pair, so I will append the name similarity 
-        # and disambiguation results (+any other fuuture features) for each pair to the features list.
-        features.append([disambiguation_feature.name_similarity(data)[i], #done
-                         disambiguation_feature.disambiguate_names(data)[i], #done
-                         scraped_features.field_similarity_feature(data)[i], #done
-                         scraped_features.institution_similarity(data)[i]])#,  #done
-                        # scraped_features.coauthorship_similarity(data)[i]]) #not started
-        
-    print(f"Extracted features are as follows: 'Name Similarity, Disambiguation, Research Area, Institution':\n {features}\n")
-    return features
-'''
-
-#Each list already has the needed format for the feature functions, so to pass them
-#in, 

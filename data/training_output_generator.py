@@ -6,23 +6,6 @@
 #Filename: training_output_generator
 
 
-'''
-Part 1
-I have a csv file which i will convert into a dataframe and take only the scopus identifiers 
-and the decisions.
-
-Part 2 - #######REMOVE THIS IN SECOND TEST AND INSTEAD SIMPLY EXCLUDE THESE IDs########
-Now I have a dataframe with a column of scopus IDs and a column of associated decisions. Blank
-cells in the Correct ID column need to be filled with 'N'.
-Now I need to clean the data s.t. all values look exactly the same.
-
-Part 3 - Now I need to take only the SCOPUS IDs that were used in the name pairs.
-
-Part 4 - Now I need to convert the Identifier column into a list that is 
-    somehow in the exact same order as the name pairs list.... Is this straightforward?
-
-'''
-
 import pandas as pd
 df = pd.read_csv('/workspaces/Scholarly-Impact---Automation-Pipeline-Work/src/data/priority_data_updated.csv')
 
@@ -33,23 +16,21 @@ def decision_vectors(shared_ids):
     #I have to adjust the rows HERE before I modify the priority dataset
     df_local = df[:2779].copy()
     
-    df_local = df_local[df_local['Identifier scheme'] == 'Scopus ID'] #without the brackets, python thinks im looking for booleans!!
+    df_local = df_local[df_local['Identifier scheme'] == 'Scopus ID'] 
     
-    #df_local = df_local.fillna("N") #This WAS an issue before my modification.
 
     df_local = df_local.dropna(subset = 'Correct ID')
    
-    #Instead I removed cells I hadn't reached yet THEN filled the empty cells with N
+    #I removed cells I hadn't reached yet THEN filled the empty cells with N
     
 
 
     df_local['Correct ID'] = df_local['Correct ID'].str.upper().str.strip()
 
-    #df_local = df_local.replace(["N","Y","CD"],[0,1,2])
-    #Apparently it's safer to use a dict?
     df_local = df_local.drop_duplicates(subset='Identifier', keep='first') 
 
-    '''=============FINAL ISSUE ^^^================='''
+    '''=============FINAL CONCERN ^^^================='''
+
     df_local = df_local.replace({"N": 0, "Y": 1, "CD": 2, "LIKELY":1, 
                                  "UNLIKELY":0, "VERY LIKELY":1,
                                  "HAS AT LEAST ONE PUBLICATION ASSOCIATED WITH THIS ID":1,

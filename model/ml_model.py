@@ -95,27 +95,64 @@ X_test  = features[split:]
 y_train = verified_y[:split]
 y_test  = verified_y[split:]
 
+
+
+#In my final output, I will run both logistic regression AND gradient boosting and 
+# export them both in the output dict csv file. I will make a function for this to contain the code and make it easier to run both models.
+def run_models(X_train, y_train, X_test, y_test):
+    #Regression model using training data
+    print("LOGISTIC REGRESSION")
+    model = LogisticRegression(class_weight='balanced') 
+    model.fit(X_train, y_train)
+
+    #try Gradient Boosting (doesn't support class_weight, so use this instead)
+    print("GRADIENT BOOSTING")
+    model_GB = GradientBoostingClassifier(random_state=42, n_estimators=1000, 
+                                       learning_rate=0.08,
+                                       validation_fraction=0.1,  # 10% of training data used for validation
+                                        n_iter_no_change=150,      # Stop if no improvement for 10 iterations
+                                        tol=1e-4, ) 
+    model_GB.fit(X_train, y_train) #No longer balancing due to high type 2 error: sample_weight=sample_weights
+    
+    lr_y_pred = model.predict(X_test)
+    gb_y_pred = model_GB.predict(X_test)
+    lr_proba = model.predict_proba(X_test)
+    gb_proba = model_GB.predict_proba(X_test)
+    lr_level = np.max(lr_proba, axis = 1)
+    gb_level = np.max(gb_proba, axis = 1)
+
+
+    print("Logistic Regression Classification Report: ", classification_report(y_test, lr_y_pred, labels=[0, 1, 2], target_names=["No Match", "Match", "Inconclusive"], zero_division=0))
+    print("Gradient Boosting Classification Report", classification_report(y_test, gb_y_pred, labels=[0, 1, 2], target_names=["No Match", "Match", "Inconclusive"], zero_division=0))
+
+    test_names = [name_pairs[i][1] for i in range(split, len(name_pairs))]
+    test_features = [features[i][0:5] for i in range(split, len(features))]
+    test_features = [str(feature_tuple) for feature_tuple in test_features]
+    output_df = pd.DataFrame(np.column_stack([test_names, lr_y_pred, gb_y_pred, y_test, lr_level, gb_level,  test_features]), index = shared_ids[split:], columns = ["UCPMS Author Name", "LR Predicted", "GB Predicted", "True value", "LR Probability", "GB Probability", "Feature Scores (name, name, field, field, institution)"])
+    output_df.to_csv('test_mixed_output_1_may30.csv')
+    print("\n Model Output can be found in test_mixed_output.csv")
+
 #------------------MODEL TYPE TESTS---------------------#
 #Regression model using training data
-#print("LOGISTIC REGRESSION")
-#model = LogisticRegression(class_weight='balanced') 
-#model.fit(X_train, y_train)
+'''print("LOGISTIC REGRESSION")
+model = LogisticRegression(class_weight='balanced') 
+model.fit(X_train, y_train)
 
 #try Gradient Boosting (doesn't support class_weight, so use this instead)
 print("GRADIENT BOOSTING")
-model = GradientBoostingClassifier(random_state=42, n_estimators=1000, 
+model_GB = GradientBoostingClassifier(random_state=42, n_estimators=1000, 
                                    learning_rate=0.08,
                                    validation_fraction=0.1,  # 10% of training data used for validation
                                     n_iter_no_change=150,      # Stop if no improvement for 10 iterations
                                     tol=1e-4, ) 
-model.fit(X_train, y_train)#No longer balancing due to high type 2 error: sample_weight=sample_weights
+model_GB.fit(X_train, y_train)'''#No longer balancing due to high type 2 error: sample_weight=sample_weights
 #---------------------------------------#
 
-
+'''
 #Testing model using the test data 
 y_pred = model.predict(X_test)
 
-print(f"Model Parameters: \nLearningRate: {model.learning_rate}\nNumberofTrees: {model.n_estimators}")
+##print(f"Model Parameters: \nLearningRate: {model.learning_rate}\nNumberofTrees: {model.n_estimators}")
 
 print("\n\nModel results:...")
 # Breakdown by class (0, 1, 2)
@@ -143,19 +180,13 @@ print(f"Test Features: {test_features[:10]}")
 ##################OUTPUT DICTIONARY##########################
 #@Brief: This section generates a dictionary with SCOPUS IDs as keys. The paired
 # values will inlcude the model's decision and its prediction scores (Value assigned to each class). 
-'''print("\n\nGenerating Model Output...")
+print("\n\nGenerating Model Output...")
 
 output_df = pd.DataFrame(np.column_stack([y_pred, y_test, level, test_names, test_features]), index = shared_ids[split:], columns = ["Predicted", "True value", "Probability", "UCPMS Author Name", "Feature Scores (name, name, field, field, institution)"])
-output_df.to_csv('test_output_6_may27.csv')
+output_df.to_csv('test_output_9_may27.csv')
 print("\n Model Output can be found in test_output.csv")
 
 '''
 
-##################Older Code##########################
 
-'''
-#How much does each feature contribute?
-feature_names = ['name_sim', 'name_disambig', 'field_sim', 'field_fuzz_sim', 'institution_sim']
-print("\n\nFeature coefficients:")
-for name, coef in zip(feature_names, np.abs(model.coef_).mean(axis=0)):
-    print(f"  {name}: {coef:.4f}")'''
+run_models(X_train, y_train, X_test, y_test)

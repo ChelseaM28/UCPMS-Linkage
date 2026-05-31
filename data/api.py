@@ -12,40 +12,25 @@ from pybliometrics.scopus import AuthorRetrieval, AffiliationRetrieval, SubjectC
 
 def retrieve_scopus_data():
     print("Running retrieve_scopus_data...")
-    #print("Retrieving SCOPUS IDs from csv file...\n")
     scopus_api_data = {}
     df = pd.read_csv('src/data/original.csv') #this is the csv file that contains the scopus ids and other data that I will use for training the model
 
-    #print("Removing Non-SCOPUS IDs...\n")
-    #Removing orcid ids (indicated in the csv file by the identifier scheme column) and any rows with missing scopus ids
     df = df[7929:] #This is how I continued to retrive after my limit ran out in week 1
     df = df[df['Identifier scheme'] == 'Scopus ID']
     df = df[df['Identifier'] != 'NaN']
     
-
-
-    #print("Creating list of failed/merged SCOPUS IDs...\n")
     failed_ids = []
 
-    #print("Creating dictionary with SCOPUS API data for training the model...\n")
-    #print("This may take a few moments...\n")
-
-
-#I think i need to move the try/except INSIDE the for loop so it doens't stop after the first failed ID
-    
     for scopus_id in df['Identifier']: #this is the column in the csv file that contains the scopus ids
         try:
             author = AuthorRetrieval(author_id=scopus_id, view = 'ENHANCED')
             affiliation = author.affiliation_current
-            #co_authors = author.get_coauthors()
             field = author.subject_areas
-        
+    
             scopus_api_data[scopus_id] = {"author name": author, "affiliation": affiliation, "field": field}
         except Exception as e:
             print(f"  ✗ Failed for ID {scopus_id}: {e}")
             failed_ids.append(scopus_id)
-
-
     print("Completed running retrieve_scopus_data.  Data has been saved.\n")
     return scopus_api_data
 
@@ -88,7 +73,8 @@ import json
 with open('scopus_cleaned_v3.json', 'w') as f:
     json.dump(selected_data, f, indent=2)
 
-
+'''
+#Code was used to merge json files
 #Now I need to append the next json file:
 # Load both files
 with open('scopus_cleaned_v2.json', 'r') as f:  #  original file
@@ -107,3 +93,4 @@ with open('scopus_cleaned_merged.json', 'w') as f:
 print(f"v1 records: {len(data_v1)}")
 print(f"v3 records: {len(data_v3)}")
 print(f"Merged records: {len(merged)}")
+'''

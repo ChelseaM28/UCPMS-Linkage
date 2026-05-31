@@ -10,22 +10,6 @@ pipeline.
 # Version: 1.0
 
 
-'''data = [
-    ("A. Ennamaria B", "AMENTA, Ennamaria B"),
-    ("AMES, James B", "Ames, James"),
-    ("ANDERSON, D", "ANDERSON, Damien"),
-    ("ARMIEN, Anibal G", "Armién, Aníbal Guillermo"),
-    ("JOHNSTON, Warren E", "Johnston, W. R.")
-]
-
-data_test = [
-    ("B. Carlos M", "MENDEZ, Carlos B"),       
-    ("SMITH, John A", "Smuth, John"),         
-    ("LEE, D", "LEE, Daniel"),              
-    ("NGUYEN, Linh T", "Nguyen, Linh Thi"),      
-    ("GARCIA, Ramon F", "Garcia, R. J.") 
-]'''
-
 ##################NAME UNSCRAMBLING DETECTION##########################
 #@Brief: Checking the order of commas to determine the order of the name. 
 #        UCMPS and SCOPUS formatting frequently differs in this way.
@@ -96,7 +80,7 @@ def name_similarity(data):
 def disambiguate_names(data):
     print("Running: 'disambiguate_names'...")
     special_characters = {"í": "i", "é": "e", "á": "a", "ó": "o", "ú": "u"}
-    notable_catches = {} #I might decide to use this for logging notable catches (inconclusive cases) that the model can learn from.
+    #notable_catches = {} #I might decide to use this for logging notable catches (inconclusive cases) that the model can learn from.
     matches = [] #This contains the results of the disambiguation (1 for match, 0 for no match, 2 for inconclusive)
     
     #Replacing all the special characters for normalization
@@ -110,12 +94,10 @@ def disambiguate_names(data):
 
         n1_split = sorted(normalize_format(n1))
         n2_split = sorted(normalize_format(n2))
-        #print(f"Comparing '{n1_split}' and '{n2_split}'...\n")
 
         #Looking for the middle initial. It will be the last token if there are 3 or more tokens in a name
         if len(n1_split) >= 3 and len(n2_split) >= 3:
             if n1_split[-1][:1] != n2_split[-1][:1]:
-                #print(f"{n1} and {n2} do not match due to different middle initials.\n")
                 matches.append(0)
                 continue
         
@@ -125,27 +107,16 @@ def disambiguate_names(data):
 
 
         if last_result == "reject" or first_result == "reject":
-            #print(f"{n1} and {n2} do not match.\n")
             matches.append(0)
         elif last_result == "accept" and first_result == "accept":
-            #print(f"{n1} and {n2} match.\n")
             matches.append(1)
         else: #This will run if there are only initials available, which is not enough information to 
             #make a determination.
-            #print(f"{n1} and {n2} are inconclusive.\n")
-            matches.append(2)
+            matches.append(0) #INCONCLUSIVE = NON MATCH
             notable_catches[(n1, n2)] = "inconclusive"
     print("Completed running: 'disambiguate_names")
     return matches
 
 
 
-#REVISIT THIS!!: 
-#I don't know if the ML model can output 2 for inconclusive cases, but I will include it in the training data and see 
-# if the model can learn to identify those cases as well.
-'''
-model = LogisticRegression()
-model.fit(X_train, y_train)
-
-print(f"The machine learning model predicts: {model.predict(X_test)}")
-#print("bingo")'''
+#Revist: How often does the model include 2 for inconclusive?
